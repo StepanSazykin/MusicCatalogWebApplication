@@ -1,0 +1,104 @@
+﻿@model MusicCatalogWebApplication.Models.Playlist
+
+@{
+    ViewData["Title"] = "Создать плейлист";
+    var tracks = ViewData["Tracks"] as List<MusicCatalogWebApplication.Models.Track>;
+}
+
+<h1>Создать плейлист</h1>
+
+@if (TempData["PlaylistSuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["PlaylistSuccessMessage"]</div>
+}
+@if (TempData["PlaylistErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["PlaylistErrorMessage"]</div>
+}
+
+<hr />
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label">Название</label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3 form-check">
+                <input asp-for="IsPublic" class="form-check-input" type="checkbox" title="Если отмечено, плейлист будет отправлен на модерацию и станет публичным после одобрения администратором." data-bs-toggle="tooltip" data-bs-placement="top" />
+                <label asp-for="IsPublic" class="form-check-label">Публичный</label>
+                <span asp-validation-for="IsPublic" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label">Описание</label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Выберите треки</label>
+                <input type="text" id="trackSearch" class="form-control mb-2" placeholder="Поиск треков..." />
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Выбрать</th>
+                                <th>Название</th>
+                                <th>Альбом</th>
+                                <th>Исполнитель</th>
+                                <th>Длительность</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trackTable">
+                            @foreach (var track in tracks)
+                            {
+                                <tr class="track-row">
+                                    <td>
+                                        <input type="checkbox" name="trackIds" value="@track.ID" />
+                                    </td>
+                                    <td>@track.Title</td>
+                                    <td>@(track.Album?.Title ?? "Неизвестный альбом")</td>
+                                    <td>@(track.Album?.Artist?.Name ?? "Неизвестный исполнитель")</td>
+                                    <td>@(track.Duration > 0 ? TimeSpan.FromSeconds(track.Duration).ToString(@"mm\:ss") : "Не указана")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="Создать" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary">Вернуться к списку</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Инициализация tooltip при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // Поиск треков
+        document.getElementById('trackSearch').addEventListener('input', function () {
+            var searchValue = this.value.toLowerCase();
+            var rows = document.querySelectorAll('#trackTable .track-row');
+            rows.forEach(function (row) {
+                var text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchValue) ? '' : 'none';
+            });
+        });
+    </script>
+}

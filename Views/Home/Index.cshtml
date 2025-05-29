@@ -1,0 +1,90 @@
+﻿@model MusicCatalogWebApplication.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Дашборд";
+}
+
+<div class="container mt-4">
+    <!-- Уведомление -->
+    @if (TempData["WelcomeMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Html.Raw(TempData["WelcomeMessage"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (Model.HasContent)
+    {
+        <!-- Блок статистики -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Треки</h5>
+                        <p class="card-text display-4">@Model.TrackCount</p>
+                        <a href="@Url.Action("Index", "Tracks")" class="btn btn-primary">Перейти к трекам</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Плейлисты</h5>
+                        <p class="card-text display-4">@Model.PlaylistCount</p>
+                        <a href="@Url.Action("Index", "Playlists")" class="btn btn-primary">Перейти к плейлистам</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Избранное</h5>
+                        <p class="card-text display-4">@Model.FavoriteCount</p>
+                        <a href="@Url.Action("Index", "Favorite")" class="btn btn-primary">Перейти к избранному</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Последние треки -->
+        @if (Model.RecentTracks.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Последние добавленные треки</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var track in Model.RecentTracks)
+                        {
+                            <li class="list-group-item">
+                                <a href="@Url.Action("Details", "Tracks", new { id = track.TrackId, returnUrl = Url.Action("Index", "Home") })">
+                                    @track.Title - @track.ArtistName
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
+        <!-- Кнопки навигации -->
+        <div class="d-flex justify-content-center gap-3">
+            <a href="@Url.Action("Index", "Tracks")" class="btn btn-outline-primary">Каталог</a>
+            <a href="@Url.Action("Index", "Playlists")" class="btn btn-outline-primary">Плейлисты</a>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <p>Контент отсутствует. Начните с добавления треков или плейлистов!</p>
+            <a href="@Url.Action("Create", "Tracks")" class="btn btn-primary">Добавить трек</a>
+        </div>
+    }
+
+    <!-- Футер с ссылкой на туториал -->
+    <footer class="mt-4 text-center">
+        <p>Новичок? Ознакомьтесь с <a href="/tutorial">туториалом</a>!</p>
+    </footer>
+</div>

@@ -1,0 +1,45 @@
+﻿@model MusicCatalogWebApplication.Models.Album
+
+@{
+    ViewData["Title"] = "Удалить альбом";
+}
+
+<h1>Удалить альбом</h1>
+
+<h3>Вы уверены, что хотите удалить альбом @Model.Title?</h3>
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">
+            Название
+        </dt>
+        <dd class="col-sm-10">
+            @Model.Title
+        </dd>
+        <dt class="col-sm-2">
+            Артист
+        </dt>
+        <dd class="col-sm-10">
+            @Model.Artist?.Name
+        </dd>
+        <dt class="col-sm-2">
+            Дата выпуска
+        </dt>
+        <dd class="col-sm-10">
+            @Model.ReleaseDate?.ToString("dd.MM.yyyy")
+        </dd>
+        <dt class="col-sm-2">
+            Жанр
+        </dt>
+        <dd class="col-sm-10">
+            @Model.Genre?.Name
+        </dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <form asp-action="Delete">
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+            <input type="submit" value="Удалить" class="btn btn-danger" />
+            <a href="@(ViewBag.ReturnUrl ?? Url.Action("Index", "Albums"))" class="btn btn-secondary">Назад</a>
+        </form>
+    </form>
+</div>

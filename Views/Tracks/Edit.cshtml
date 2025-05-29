@@ -1,0 +1,114 @@
+﻿@model MusicCatalogWebApplication.Models.TrackViewModel
+
+@{
+    ViewData["Title"] = ViewBag.IsOwnerOrAdmin ? "Редактировать трек" : "Предложить теги";
+    var durationString = Model.Duration > 0 ? TimeSpan.FromSeconds(Model.Duration).ToString(@"mm\:ss") : "";
+}
+
+<h1>@(ViewBag.IsOwnerOrAdmin ? $"Редактировать трек {Model.Title}" : $"Предложить теги для трека {Model.Title}")</h1>
+
+@if (!ViewBag.IsOwnerOrAdmin)
+{
+    <div class="alert alert-info">
+        Вы можете предложить только теги для этого трека. Остальные поля доступны только для просмотра.
+    </div>
+}
+
+@if (TempData["TrackSuccessMessage"] != null)
+{
+    <div class="alert alert-@(TempData["MessageType"] ?? "success") alert-dismissible fade show" role="alert">
+        @TempData["TrackSuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["TrackErrorMessage"] != null)
+{
+    <div class="alert alert-@(TempData["MessageType"] ?? "error") alert-dismissible fade show" role="alert">
+        @TempData["TrackErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<form asp-action="Edit" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="ID" />
+    <div class="form-group mb-3">
+        <label asp-for="Title" class="control-label"></label>
+        @if (ViewBag.IsOwnerOrAdmin)
+        {
+            <input asp-for="Title" class="form-control" />
+        }
+        else
+        {
+            <input asp-for="Title" class="form-control" readonly />
+        }
+        <span asp-validation-for="Title" class=" text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label asp-for="Album_ID" class="control-label"></label>
+        @if (ViewBag.IsOwnerOrAdmin)
+        {
+            <select asp-for="Album_ID" class="form-control" asp-items="@(ViewData["Album_ID"] as SelectList)"></select>
+        }
+        else
+        {
+            <select asp-for="Album_ID" class="form-control" asp-items="@(ViewData["Album_ID"] as SelectList)" disabled></select>
+        }
+        <span asp-validation-for="Album_ID" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label asp-for="DurationString" class="control-label">Длительность (MM:SS)</label>
+        @if (ViewBag.IsOwnerOrAdmin)
+        {
+            <input asp-for="DurationString" class="form-control" value="@durationString" placeholder="MM:SS" pattern="^[0-5]?[0-9]:[0-5][0-9]$" title="Введите длительность в формате MM:SS (например, 03:45)" />
+        }
+        else
+        {
+            <input asp-for="DurationString" class="form-control" value="@durationString" placeholder="MM:SS" readonly />
+        }
+        <span asp-validation-for="DurationString" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3 form-check">
+        @if (ViewBag.IsOwnerOrAdmin)
+        {
+            <input asp-for="IsPublic" class="form-check-input" type="checkbox" title="Если отмечено, трек будет отправлен на модерацию и станет публичным после одобрения администратором." data-bs-toggle="tooltip" data-bs-placement="top" />
+            <label asp-for="IsPublic" class="form-check-label"></label>
+        }
+        else
+        {
+            <input asp-for="IsPublic" class="form-check-input" type="checkbox" disabled title="Если отмечено, трек будет отправлен на модерацию и станет публичным после одобрения администратором." data-bs-toggle="tooltip" data-bs-placement="top" />
+            <label asp-for="IsPublic" class="form-check-label"></label>
+        }
+        <span asp-validation-for="IsPublic" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="SelectedTagIds" class="control-label">Теги</label>
+        <select asp-for="SelectedTagIds" class="form-control select2" multiple asp-items="@(ViewData["Tags"] as MultiSelectList)"></select>
+    </div>
+    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+    <div class="form-group mt-3">
+        <input type="submit" value="@(ViewBag.IsOwnerOrAdmin ? "Сохранить" : "Предложить теги")" class="btn btn-primary" />
+        <a href="@(ViewBag.ReturnUrl ?? Url.Action("Index", "Tracks"))" class="btn btn-secondary">Назад</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                placeholder: "Выберите теги",
+                allowClear: true,
+                width: '100%'
+            });
+            $('[data-bs-toggle="tooltip"]').tooltip(); // инициализация tooltips
+        });
+    </script>
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />

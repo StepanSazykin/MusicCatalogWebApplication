@@ -1,0 +1,77 @@
+﻿@using System.Security.Claims
+@model IEnumerable<MusicCatalogWebApplication.Models.Album>
+@{
+    ViewData["Title"] = "Альбомы артиста";
+    var artist = ViewData["Artist"] as MusicCatalogWebApplication.Models.Artist;
+}
+
+@if (artist == null)
+{
+    <div class="alert alert-danger">Артист не найден.</div>
+    <a href="@(ViewBag.ReturnUrl ?? Url.Action("Index", "Artists"))" class="btn btn-secondary">Назад</a>
+}
+else
+{
+    <h1>Альбомы артиста: @artist.Name</h1>
+
+    @if (!User.IsInRole("Guest") && Model.Any())
+    {
+        <p>
+            <a asp-controller="Albums" asp-action="Create" asp-route-artistId="@artist.ID" class="btn btn-primary">Добавить альбом</a>
+        </p>
+    }
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Дата выпуска</th>
+                <th>Жанр</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center">
+                        <p>У данного артиста отсутствуют альбомы.</p>
+                        @if (!User.IsInRole("Guest"))
+                        {
+                            <a asp-controller="Albums" asp-action="Create" asp-route-artistId="@artist.ID" class="btn btn-primary">Добавить альбомы</a>
+                        }
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var album in Model)
+                {
+                    <tr>
+                        <td>@album.Title</td>
+                        <td>@album.ReleaseDate?.ToString("dd.MM.yyyy")</td>
+                        <td>@album.Genre?.Name</td>
+                        <td>
+                            <a asp-controller="Albums" asp-action="Tracks" asp-route-albumId="@album.ID" class="btn btn-info btn-sm">Треки</a>
+                            @if (User.Identity.IsAuthenticated && !User.IsInRole("Guest"))
+                            {
+                                <form asp-controller="Favorite" asp-action="AddFavoriteAlbum" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="albumId" value="@album.ID" />
+                                    <button type="submit" class="btn btn-success btn-sm">В избранное</button>
+                                </form>
+                            }
+                            @if (User.IsInRole("Admin") || album.Owner_ID == (ViewData["CurrentUserId"] as int?))
+                            {
+                                <a asp-action="Edit" asp-controller="Albums" asp-route-id="@album.ID" asp-route-artistId="@artist.ID" class="btn btn-warning btn-sm">Редактировать</a>
+                                <a asp-action="Delete" asp-controller="Albums" asp-route-id="@album.ID" asp-route-artistId="@artist.ID" class="btn btn-danger btn-sm">Удалить</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    <a href="@(ViewBag.ReturnUrl ?? Url.Action("Index", "Artists"))" class="btn btn-secondary">Назад</a>
+}

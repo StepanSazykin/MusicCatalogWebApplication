@@ -1,0 +1,121 @@
+﻿@model MusicCatalogWebApplication.Models.AddToCatalogViewModel
+@{
+    ViewData["Title"] = "Добавить в каталог";
+}
+
+<div class="container mt-4">
+    <h2>Добавить в каталог</h2>
+
+    @if (TempData["CatalogSuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["CatalogSuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+        </div>
+    }
+    @if (TempData["CatalogErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["CatalogErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+        </div>
+    }
+
+    <form asp-action="AddToCatalog" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="EntityType" class="form-label">Тип сущности</label>
+                    <select asp-for="EntityType" class="form-select" id="entityType">
+                        <option value="">Выберите тип</option>
+                        <option value="Artist">Артист</option>
+                        <option value="Album">Альбом</option>
+                        <option value="Track">Трек</option>
+                    </select>
+                    <span asp-validation-for="EntityType" class="text-danger"></span>
+                </div>
+
+                <!-- Поля для артиста -->
+                <div class="entity-fields" id="artistFields" style="display: none;">
+                    <div class="mb-3">
+                        <label asp-for="ArtistName" class="form-label">Имя артиста</label>
+                        <input asp-for="ArtistName" class="form-control" />
+                        <span asp-validation-for="ArtistName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Поля для альбома -->
+                <div class="entity-fields" id="albumFields" style="display: none;">
+                    <div class="mb-3">
+                        <label asp-for="AlbumTitle" class="form-label">Название альбома</label>
+                        <input asp-for="AlbumTitle" class="form-control" />
+                        <span asp-validation-for="AlbumTitle" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ArtistId" class="form-label">Артист</label>
+                        <select asp-for="ArtistId" class="form-select" asp-items="@Model.Artists"></select>
+                        <span asp-validation-for="ArtistId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="GenreId" class="form-label">Жанр</label>
+                        <select asp-for="GenreId" class="form-select" asp-items="@Model.Genres"></select>
+                        <span asp-validation-for="GenreId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ReleaseDate" class="form-label">Дата выпуска</label>
+                        <input asp-for="ReleaseDate" class="form-control" type="date" />
+                        <span asp-validation-for="ReleaseDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Поля для трека -->
+                <div class="entity-fields" id="trackFields" style="display: none;">
+                    <div class="mb-3">
+                        <label asp-for="TrackTitle" class="form-label">Название трека</label>
+                        <input asp-for="TrackTitle" class="form-control" />
+                        <span asp-validation-for="TrackTitle" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="AlbumId" class="form-label">Альбом</label>
+                        <select asp-for="AlbumId" class="form-select" asp-items="@Model.Albums"></select>
+                        <span asp-validation-for="AlbumId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Duration" class="form-label">Длительность (в секундах)</label>
+                        <input asp-for="Duration" class="form-control" type="number" />
+                        <span asp-validation-for="Duration" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="IsPublic" class="form-label">Публичный</label>
+                        <input asp-for="IsPublic" class="form-check-input" type="checkbox" />
+                        <span asp-validation-for="IsPublic" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Добавить</button>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Назад</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/additional-methods.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#entityType").change(function () {
+                $(".entity-fields").hide();
+                if ($(this).val() === "Artist") {
+                    $("#artistFields").show();
+                } else if ($(this).val() === "Album") {
+                    $("#albumFields").show();
+                } else if ($(this).val() === "Track") {
+                    $("#trackFields").show();
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,154 @@
+﻿@model MusicCatalogWebApplication.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Регистрация";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="text-center">Регистрация</h2>
+            <form asp-action="Register" method="post">
+                <div class="form-group mb-3">
+                    <label asp-for="Login" class="form-label">Логин <span class="text-danger">*</span></label>
+                    <input asp-for="Login" class="form-control" required oninput="clearError(this)" />
+                    <span asp-validation-for="Login" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" type="email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Password" class="form-label">Пароль <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input asp-for="Password" type="password" id="password" class="form-control" required />
+                        <button type="button" id="togglePassword" class="btn btn-outline-secondary" style="border: none;">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="ConfirmPassword" class="form-label">Подтверждение пароля <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input asp-for="ConfirmPassword" type="password" id="confirmPassword" class="form-control" required />
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="passwordStrength" class="form-label">Сложность пароля</label>
+                    <div class="progress">
+                        <div id="passwordStrength" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <button type="button" id="generatePassword" class="btn btn-secondary w-100">Сгенерировать пароль</button>
+                </div>
+                <div class="form-group mb-3">
+                    <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+                </div>
+                <div class="form-group text-center">
+                    <a asp-action="Login" class="btn btn-link">Войти</a>
+                </div>
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+                    </div>
+                }
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <p>@error.ErrorMessage</p>
+                        }
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Показать/скрыть оба пароля
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const icon = this.querySelector('i');
+            const isPasswordVisible = passwordInput.type === 'password';
+            passwordInput.type = isPasswordVisible ? 'text' : 'password';
+            confirmPasswordInput.type = isPasswordVisible ? 'text' : 'password';
+            icon.classList.toggle('bi-eye', !isPasswordVisible);
+            icon.classList.toggle('bi-eye-slash', isPasswordVisible);
+        });
+
+        // Проверка сложности пароля
+        document.getElementById('password').addEventListener('input', function () {
+            const password = this.value;
+            const strengthBar = document.getElementById('passwordStrength');
+
+            fetch('/Account/CheckPasswordStrength', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let width = 0;
+                let className = '';
+                switch (data.strength) {
+                    case 'VeryWeak':
+                        width = 25;
+                        className = 'bg-danger';
+                        break;
+                    case 'Weak':
+                        width = 50;
+                        className = 'bg-warning';
+                        break;
+                    case 'Medium':
+                        width = 75;
+                        className = 'bg-info';
+                        break;
+                    case 'Strong':
+                        width = 100;
+                        className = 'bg-success';
+                        break;
+                }
+                strengthBar.style.width = width + '%';
+                strengthBar.className = 'progress-bar ' + className;
+                strengthBar.innerText = data.strength === 'VeryWeak' ? 'Очень слабый' : data.strength === 'Weak' ? 'Слабый' : data.strength === 'Medium' ? 'Средний' : 'Сильный';
+            });
+        });
+
+        // Генерация случайного пароля
+        document.getElementById('generatePassword').addEventListener('click', function () {
+            fetch('/Account/GenerateRandomPassword', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const passwordInput = document.getElementById('password');
+                const confirmPasswordInput = document.getElementById('confirmPassword');
+                passwordInput.value = data.password;
+                confirmPasswordInput.value = data.password;
+                passwordInput.dispatchEvent(new Event('input')); // Обновить прогресс-бар
+            });
+        });
+    </script>
+    <script>
+        function clearError(element) {
+            $(element).next('.text-danger').text('');
+            $(element).removeClass('is-invalid');
+        }
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}

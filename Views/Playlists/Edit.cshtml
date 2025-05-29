@@ -1,0 +1,75 @@
+﻿@model MusicCatalogWebApplication.Models.Playlist
+
+@{
+    ViewData["Title"] = "Редактировать плейлист";
+    bool isOwnerOrAdmin = ViewData["IsOwnerOrAdmin"] != null && (bool)ViewData["IsOwnerOrAdmin"];
+}
+
+<h1>Редактировать плейлист @Model.Name</h1>
+
+@if (!isOwnerOrAdmin)
+{
+    <div class="alert alert-info">
+        Вы редактируете чужой плейлист. Ваши изменения будут отправлены на рассмотрение администратору.
+    </div>
+}
+
+@if (TempData["PlaylistSuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["PlaylistSuccessMessage"]</div>
+}
+@if (TempData["PlaylistErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["PlaylistErrorMessage"]</div>
+}
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ID" />
+            <div class="form-group">
+                <label asp-for="Name" class="control-label">Название</label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            @if (isOwnerOrAdmin)
+            {
+                <div class="form-group mb-3 form-check">
+                    <input asp-for="IsPublic" class="form-check-input" type="checkbox" title="Если отмечено, плейлист будет отправлен на модерацию и станет публичным после одобрения администратором." data-bs-toggle="tooltip" data-bs-placement="top" />
+                    <label asp-for="IsPublic" class="form-check-label">Публичный</label>
+                    <small class="form-text text-muted">Публичные плейлисты отправляются на модерацию.</small>
+                    <span asp-validation-for="IsPublic" class="text-danger"></span>
+                </div>
+            }
+            <div class="form-group">
+                <label asp-for="Description" class="control-label">Описание</label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="Сохранить" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary">Вернуться к списку</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Инициализация tooltip при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+}

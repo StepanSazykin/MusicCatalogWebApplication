@@ -1,0 +1,82 @@
+﻿@model MusicCatalogWebApplication.Models.Artist
+
+@{
+    ViewData["Title"] = "Создать артиста";
+}
+
+<h1>Создать артиста</h1>
+
+@if (TempData["ArtistSuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["ArtistSuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ArtistErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ArtistErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="form-group mb-3">
+        <label asp-for="Name" class="control-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label asp-for="Country" class="control-label"></label>
+        <select asp-for="Country" class="form-control select2" data-placeholder="Выберите страну">
+            <option></option>
+            @foreach (var country in new[] { "Россия", "США", "Великобритания", "Франция", "Германия", "Швеция", "Канада", "Южная Корея", "Япония", "Испания", "Италия", "Австралия", "Бразилия", "Мексика", "Нидерланды" })
+            {
+                <option value="@country">@country</option>
+            }
+        </select>
+        <span asp-validation-for="Country" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label asp-for="CreationYear" class="control-label"></label>
+        <input asp-for="CreationYear" class="form-control" type="number" min="1900" max="2025" />
+        <span asp-validation-for="CreationYear" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3 form-check">
+        <input asp-for="IsPublic" class="form-check-input" type="checkbox" title="Если отмечено, артист будет отправлен на модерацию и станет публичным после одобрения администратором." data-bs-toggle="tooltip" data-bs-placement="top" />
+        <label asp-for="IsPublic" class="form-check-label"></label>
+        <span asp-validation-for="IsPublic" class="text-danger"></span>
+    </div>
+    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+    <div class="form-group mt-3">
+        <input type="submit" value="Создать" class="btn btn-primary" />
+        <a href="@(ViewBag.ReturnUrl ?? Url.Action("Index", "Artists"))" class="btn btn-secondary">Назад</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                placeholder: "Выберите страну",
+                allowClear: true,
+                width: '100%',
+                dropdownAutoWidth: true,
+                language: {
+                    noResults: function () {
+                        return "Страна не найдена";
+                    }
+                }
+            });
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
+}

@@ -1,0 +1,122 @@
+﻿@using System.Security.Claims
+@model IEnumerable<MusicCatalogWebApplication.Models.Album>
+@{
+    ViewData["Title"] = "Альбомы";
+}
+
+<h1>Список альбомов</h1>
+
+@if (!User.IsInRole("Guest"))
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Создать новый альбом</a>
+    </p>
+}
+
+<form asp-action="Index" method="get" class="mb-3">
+    <div class="row">
+        <div class="col-md-3">
+            <input type="text" name="searchString" class="form-control" placeholder="Поиск по названию"
+                   value="@ViewData["SearchString"]" title="Введите название альбома или исполнителя для поиска"
+                   data-bs-toggle="tooltip" data-bs-placement="top" />
+        </div>
+        <div class="col-md-2">
+            <select name="artistId" class="form-select" asp-items="@(ViewData["Artists"] as SelectList)">
+                <option value="">Все артисты</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="genreId" class="form-select" asp-items="@(ViewData["Genres"] as SelectList)">
+                <option value="">Все жанры</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="number" min="1900" max="2025" name="releaseYearFrom" class="form-control" placeholder="Год от" value="@ViewData["ReleaseYearFrom"]" />
+        </div>
+        <div class="col-md-2">
+            <input type="number" min="1900" max="2025" name="releaseYearTo" class="form-control" placeholder="Год до" value="@ViewData["ReleaseYearTo"]" />
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100">Найти</button>
+        </div>
+    </div>
+</form>
+
+@if (TempData["AlbumSuccessMessage"] != null)
+{
+    <div class="alert alert-@(TempData["MessageType"] ?? "success") alert-dismissible fade show" role="alert">
+        @TempData["AlbumSuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["AddAlbumSuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["AddAlbumSuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+    </div>
+}
+
+@if (ViewBag.NoResultsMessage != null)
+{
+    <div class="alert alert-info">@ViewBag.NoResultsMessage</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Артист</th>
+            <th>Год выпуска</th>
+            <th>Жанр</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var album in Model)
+        {
+            <tr>
+                <td>@album.Title</td>
+                <td>@(album.Artist?.Name)</td>
+                <td>@(album.ReleaseDate?.ToString("dd.MM.yyyy") ?? "Не указан")</td>
+                <td>@(album.Genre?.Name)</td>
+                <td>
+                    <a asp-action="Tracks" asp-route-albumId="@album.ID" asp-route-fromCatalog="true" asp-route-returnUrl="@ViewBag.ReturnUrl" class="btn btn-info btn-sm">Показать треки</a>
+                    @if (User.Identity.IsAuthenticated && !User.IsInRole("Guest"))
+                    {
+                        <form asp-controller="Favorite" asp-action="AddFavoriteAlbum" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="albumId" value="@album.ID" />
+                            <button type="submit" class="btn btn-success btn-sm">В избранное</button>
+                        </form>
+                    }
+                    @if (User.IsInRole("Admin") || album.Owner_ID == (int)ViewData["CurrentUserId"])
+                    {
+                        <a asp-action="Edit" asp-route-id="@album.ID" class="btn btn-sm btn-warning">Редактировать</a>
+                        <a asp-action="Delete" asp-route-id="@album.ID" class="btn btn-sm btn-danger">Удалить</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<nav>
+    <ul class="pagination">
+        @for (int i = 1; i <= (int)ViewData["TotalPages"]; i++)
+        {
+            <li class="page-item @(i == (int)ViewData["CurrentPage"] ? "active" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { searchString = ViewData["SearchString"], artistId = ViewData["ArtistId"], genreId = ViewData["GenreId"], releaseYearFrom = ViewData["ReleaseYearFrom"], releaseYearTo = ViewData["ReleaseYearTo"], page = i })">@i</a>
+            </li>
+        }
+    </ul>
+</nav>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
+}

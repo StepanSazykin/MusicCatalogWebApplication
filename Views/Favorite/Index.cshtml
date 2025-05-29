@@ -1,0 +1,78 @@
+﻿@model MusicCatalogWebApplication.Models.FavoriteViewModel
+
+@{
+    ViewData["Title"] = "Избранное";
+}
+
+<div class="container mt-4">
+    @if (Model.Artists.Any() || Model.Albums.Any() || Model.Tracks.Any())
+    {
+        <!-- Избранные артисты -->
+        @if (Model.Artists.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Избранные артисты</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var artist in Model.Artists)
+                        {
+                            <li class="list-group-item">
+                                <a href="@Url.Action("Albums", "Artists", new { artistId = artist.Id, returnUrl = Url.Action("Index", "Favorite") })">@artist.Name</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
+        <!-- Избранные альбомы -->
+        @if (Model.Albums.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Избранные альбомы</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var album in Model.Albums)
+                        {
+                            <li class="list-group-item">
+                                <a href="@Url.Action("Tracks", "Albums", new { albumId = album.Id, returnUrl = Url.Action("Index", "Favorite") })">@album.Name</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
+        <!-- Избранные треки -->
+        @if (Model.Tracks.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Избранные треки</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var track in Model.Tracks)
+                        {
+                            <li class="list-group-item">
+                                <a href="@Url.Action("Details", "Tracks", new { id = track.Id, returnUrl = Url.Action("Index", "Favorite") })">@track.Name</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+        }
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <p>Ваше избранное пусто. Добавьте артистов, альбомы или треки!</p>
+            <a href="@Url.Action("Index", "Tracks")" class="btn btn-primary">Перейти к трекам</a>
+        </div>
+    }
+</div>

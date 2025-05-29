@@ -1,0 +1,37 @@
+﻿@model MusicCatalogWebApplication.Models.Playlist
+
+@{
+    ViewData["Title"] = "Удалить плейлист";
+    int? currentUserId = ViewData["CurrentUserId"] != null ? (int)ViewData["CurrentUserId"] : null;
+}
+
+<h1>Удалить плейлист: @Model.Name</h1>
+
+<h3>Вы уверены, что хотите удалить этот плейлист?</h3>
+
+@if (TempData["PlaylistErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["PlaylistErrorMessage"]</div>
+}
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Название</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Name)</dd>
+        <dt class="col-sm-2">Публичный</dt>
+        <dd class="col-sm-10">@(Model.IsPublic ? "ДА" : "НЕТ")</dd>
+        <dt class="col-sm-2">Дата создания</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.CreatedDate.ToString("dd.MM.yyyy"))</dd>
+        <dt class="col-sm-2">Описание</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Description)</dd>
+        <dt class="col-sm-2">Владелец</dt>
+        <dd class="col-sm-10">@(Model.User_ID == currentUserId ? "ВЫ" : Model.User.Login)</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="ID" />
+        <input type="submit" value="Удалить" class="btn btn-danger" />
+        <a asp-action="Index" class="btn btn-secondary">Вернуться к списку</a>
+    </form>
+</div>

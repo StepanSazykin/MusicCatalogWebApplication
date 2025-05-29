@@ -1,0 +1,92 @@
+﻿@using Microsoft.EntityFrameworkCore
+@model MusicCatalogWebApplication.Models.Track
+@inject MusicCatalogWebApplication.Context.ApplicationDbContext _context
+
+@{
+    ViewData["Title"] = $"Подробно о треке {Model.Title}";
+}
+
+@if (TempData["TrackErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["TrackErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Название</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Title)</dd>
+        <dt class="col-sm-2">Альбом</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Album.Title)</dd>
+        <dt class="col-sm-2">Исполнитель</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Album.Artist.Name)</dd>
+        <dt class="col-sm-2">Жанр</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Album.Genre.Name)</dd>
+        <dt class="col-sm-2">Год выпуска</dt>
+        <dd class="col-sm-10">@(Model.Album.ReleaseDate?.Year.ToString() ?? "Не указан")</dd>
+        <dt class="col-sm-2">Длительность</dt>
+        <dd class="col-sm-10">@TimeSpan.FromSeconds(Model.Duration).ToString(@"mm\:ss")</dd>
+        <dt class="col-sm-2">Публичный</dt>
+        <dd class="col-sm-10">@(Model.IsPublic ? "Да" : "Нет")</dd>
+        <dt class="col-sm-2">Владелец</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Owner.Login)</dd>
+        <dt class="col-sm-2">Теги</dt>
+        <dd class="col-sm-10">
+            @if (Model.TrackTags.Any())
+            {
+                @string.Join(", ", Model.TrackTags.Select(tt => tt.Tag.Name))
+            }
+            else
+            {
+                <span>Нет тегов</span>
+            }
+        </dd>
+    </dl>
+</div>
+<div>
+    <a href="@(ViewBag.ReturnUrl ?? Url.Action("Index", "Tracks"))" class="btn btn-secondary">Назад</a>
+    @{
+        int? currentUserId = null;
+        if (User.Identity.IsAuthenticated && !User.IsInRole("Guest"))
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == User.Identity.Name);
+            if (user != null)
+            {
+                currentUserId = user.ID;
+            }
+        }
+    }
+    @if (User.IsInRole("Admin") || (currentUserId.HasValue && Model.Owner_ID == currentUserId.Value))
+    {
+        <a asp-action="Edit" asp-route-id="@Model.ID" class="btn btn-primary">Редактировать</a>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@Model.ID">Удалить</button>
+        <!-- Модальное окно для подтверждения удаления -->
+        <div class="modal fade" id="deleteModal-@Model.ID" tabindex="-1" aria-labelledby="deleteModalLabel-@Model.ID" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel-@Model.ID">Подтверждение удаления</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите удалить трек "@Model.Title"?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <form asp-action="Delete" asp-route-id="@Model.ID" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger">Удалить</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (User.Identity.IsAuthenticated && !User.IsInRole("Guest"))
+    {
+        <a asp-action="Edit" asp-route-id="@Model.ID" class="btn btn-primary">Предложить теги</a>
+    }
+</div>

@@ -1,0 +1,81 @@
+﻿@model IEnumerable<MusicCatalogWebApplication.Models.Playlist>
+
+@{
+    ViewData["Title"] = "Список плейлистов";
+    int? currentUserId = ViewData["CurrentUserId"] != null ? (int)ViewData["CurrentUserId"] : null;
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+@if (TempData["PlaylistSuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["PlaylistSuccessMessage"]</div>
+}
+@if (TempData["PlaylistErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["PlaylistErrorMessage"]</div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Создать новый</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Дата создания</th>
+            <th>Описание</th>
+            @if (isAdmin || currentUserId.HasValue)
+            {
+                <th>Создатель</th>
+                <th>Публичный</th>
+            }
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                <td>@item.CreatedDate.ToString("dd.MM.yyyy")</td>
+                @if (item.Description != null)
+                {
+                    <td>@Html.DisplayFor(modelItem => item.Description)</td>
+                }
+                else
+                {
+                    <td>Отсутсвует</td>
+                }
+
+                @if (isAdmin || (currentUserId.HasValue && item.User_ID == currentUserId))
+                {
+                    <td>@(item.User_ID == currentUserId ? "ВЫ" : item.User.Login)</td>
+                    <td>@(item.IsPublic ? "ДА" : "НЕТ")</td>
+                }
+                else if (isAdmin || currentUserId.HasValue)
+                {
+                    <td></td>
+                    <td></td>
+                }
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.ID" class="btn btn-info btn-sm">Показать треки</a>
+                    @if (isAdmin || (currentUserId.HasValue && (item.User_ID == currentUserId || item.IsPublic)))
+                    {
+                        @if ((currentUserId.HasValue && item.User_ID == currentUserId) || !item.IsPublic)
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-warning btn-sm">Редактировать</a>
+                        }
+                        else
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-warning btn-sm">Предложить изменения</a>
+                        }
+                    }
+                    @if (isAdmin || (currentUserId.HasValue && item.User_ID == currentUserId))
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.ID" class="btn btn-danger btn-sm">Удалить</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

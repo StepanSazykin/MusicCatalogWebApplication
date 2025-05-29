@@ -1,0 +1,85 @@
+﻿@model MusicCatalogWebApplication.Models.TrackViewModel
+
+@{
+    ViewData["Title"] = "Добавить трек";
+}
+
+<h1>Добавить трек</h1>
+
+@if (TempData["TrackSuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["TrackSuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["TrackErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["TrackErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="form-group mb-3">
+        <label asp-for="Title" class="control-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label asp-for="Album_ID" class="control-label"></label>
+        @if (ViewBag.AlbumId != null)
+        {
+            var album = (ViewData["Album_ID"] as SelectList)?.FirstOrDefault(x => x.Value == ViewBag.AlbumId.ToString());
+            <input type="hidden" asp-for="Album_ID" value="@ViewBag.AlbumId" />
+            <input type="text" class="form-control" value="@album?.Text" readonly />
+        }
+        else
+        {
+            <select asp-for="Album_ID" class="form-control" asp-items="@(ViewData["Album_ID"] as SelectList)"></select>
+        }
+        <span asp-validation-for="Album_ID" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label asp-for="DurationString" class="control-label">Длительность (MM:SS)</label>
+        <input asp-for="DurationString" class="form-control" placeholder="MM:SS" pattern="^[0-5]?[0-9]:[0-5][0-9]$"
+               title="Введите длительность в формате MM:SS (например, 03:45)" />
+        <span asp-validation-for="DurationString" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3 form-check">
+        <input asp-for="IsPublic" class="form-check-input" type="checkbox" title="Если отмечено, трек будет отправлен на модерацию и станет публичным после одобрения администратором." data-bs-toggle="tooltip" data-bs-placement="top" />
+        <label asp-for="IsPublic" class="form-check-label"></label>
+        <span asp-validation-for="IsPublic" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label asp-for="SelectedTagIds" class="control-label">Теги</label>
+        <select asp-for="SelectedTagIds" class="form-control select2" multiple asp-items="@(ViewData["Tags"] as MultiSelectList)"></select>
+    </div>
+    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+    <div class="form-group mt-3">
+        <input type="submit" value="Добавить" class="btn btn-primary" />
+        <a href="@(ViewBag.ReturnUrl ?? Url.Action("Index", "Tracks"))" class="btn btn-secondary">Назад</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                placeholder: "Выберите теги",
+                allowClear: true,
+                width: '100%'
+            });
+            $('[data-bs-toggle="tooltip"]').tooltip(); // инициализация tooltips
+        });
+    </script>
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />

@@ -1,0 +1,74 @@
+﻿@model MusicCatalogWebApplication.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Вход";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+    </div>
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="text-center">Вход</h2>
+            <form asp-action="Login" method="post">
+                <input type="hidden" asp-for="ReturnUrl" />
+                <div class="form-group mb-3">
+                    <label asp-for="Login" class="form-label">Логин</label>
+                    <input asp-for="Login" class="form-control" required />
+                    <span asp-validation-for="Login" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Password" class="form-label">Пароль</label>
+                    <div class="input-group">
+                        <input asp-for="Password" type="password" id="password" class="form-control" required />
+                        <button type="button" id="togglePassword" class="btn btn-outline-secondary" style="border: none;">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <button type="submit" class="btn btn-primary w-100">Войти</button>
+                </div>
+                <div class="form-group text-center mb-3">
+                    <a asp-action="Register" class="btn btn-link">Зарегистрироваться</a>
+                    <span>|</span>
+                    <a asp-action="GuestLogin" class="btn btn-link">Войти как гость</a>
+                </div>
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <p>@error.ErrorMessage</p>
+                        }
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}

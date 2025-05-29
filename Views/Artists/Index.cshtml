@@ -1,0 +1,107 @@
+﻿@using System.Security.Claims
+@model IEnumerable<MusicCatalogWebApplication.Models.Artist>
+@{
+    ViewData["Title"] = "Артисты";
+}
+
+<h1>Список артистов</h1>
+
+@if (!User.IsInRole("Guest"))
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Создать нового артиста</a>
+    </p>
+}
+
+<form asp-action="Index" method="get" class="mb-3">
+    <div class="row">
+        <div class="col-md-3">
+            <input type="text" name="searchString" class="form-control" placeholder="Поиск по имени"
+                   value="@ViewData["SearchString"]" title="Введите имя исполнителя для поиска"
+                   data-bs-toggle="tooltip" data-bs-placement="top" />
+        </div>
+        <div class="col-md-2">
+            <select name="country" class="form-select" asp-items="@(ViewData["Countries"] as SelectList)">
+                <option value="">Все страны</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="number" min="1900" max="2025" name="creationYearFrom" class="form-control" placeholder="Год от" value="@ViewData["CreationYearFrom"]" />
+        </div>
+        <div class="col-md-2">
+            <input type="number" min="1900" max="2025" name="creationYearTo" class="form-control" placeholder="Год до" value="@ViewData["CreationYearTo"]" />
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100">Найти</button>
+        </div>
+    </div>
+</form>
+
+@if (TempData["ArtistSuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["ArtistSuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (ViewBag.NoResultsMessage != null)
+{
+    <div class="alert alert-info">@ViewBag.NoResultsMessage</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Страна</th>
+            <th>Год создания</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var artist in Model)
+        {
+            <tr>
+                <td>@artist.Name</td>
+                <td>@(artist.Country ?? "Не указана")</td>
+                <td>@(artist.CreationYear?.ToString() ?? "Не указан")</td>
+                <td>
+                    <a asp-action="Albums" asp-route-artistId="@artist.ID" class="btn btn-info btn-sm">Показать альбомы</a>
+                    @if (User.Identity.IsAuthenticated && !User.IsInRole("Guest"))
+                    {
+                        <form asp-controller="Favorite" asp-action="AddFavoriteArtist" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="artistId" value="@artist.ID" />
+                            <button type="submit" class="btn btn-success btn-sm">В избранное</button>
+                        </form>
+                    }
+                    @if (User.IsInRole("Admin") || artist.Owner_ID == (int)ViewData["CurrentUserId"])
+                    {
+                        <a asp-action="Edit" asp-route-id="@artist.ID" class="btn btn-sm btn-warning">Редактировать</a>
+                        <a asp-action="Delete" asp-route-id="@artist.ID" class="btn btn-sm btn-danger">Удалить</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<nav>
+    <ul class="pagination">
+        @for (int i = 1; i <= (int)ViewData["TotalPages"]; i++)
+        {
+            <li class="page-item @(i == (int)ViewData["CurrentPage"] ? "active" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { searchString = ViewData["SearchString"], country = ViewData["Country"], creationYearFrom = ViewData["CreationYearFrom"], creationYearTo = ViewData["CreationYearTo"], page = i })">@i</a>
+            </li>
+        }
+    </ul>
+</nav>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
+}

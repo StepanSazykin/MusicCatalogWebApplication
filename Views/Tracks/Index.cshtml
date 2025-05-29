@@ -1,0 +1,231 @@
+﻿@model MusicCatalogWebApplication.Models.TrackSearchViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Треки";
+}
+
+<h1>Список треков</h1>
+
+@if (!User.IsInRole("Guest"))
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Создать новый трек</a>
+    </p>
+}
+
+<!-- Форма для поиска -->
+<form asp-action="Index" method="get" class="mb-3">
+    <div class="row">
+        <div class="col-md-3">
+            <input type="text" name="searchString" class="form-control" placeholder="Поиск по названию, альбому, исполнителю"
+            value="@ViewData["SearchString"]" title="Введите название трека, альбома или исполнителя для поиска"
+            data-bs-toggle="tooltip" data-bs-placement="top" />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100 btn-no-wrap">Найти</button>
+        </div>
+    </div>
+</form>
+
+<!-- Форма для фильтров -->
+<form asp-action="Index" method="get" class="mb-3">
+    <div class="row">
+        <div class="col-md-2">
+            <select name="genreId" class="form-select" asp-items="@(ViewData["Genres"] as SelectList)">
+                <option value="">Все жанры</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="number" min="1900" max="2025" name="yearFrom" class="form-control" placeholder="Год от (>= 1900)" value="@ViewData["YearFrom"]" />
+        </div>
+        <div class="col-md-2">
+            <input type="number" min="1900" max="2025" name="yearTo" class="form-control" placeholder="Год до (<= 2025)" value="@ViewData["YearTo"]" />
+        </div>
+        <div class="col-md-2">
+            <select name="tag" class="form-select" asp-items="@(ViewData["Tags"] as SelectList)">
+                <option value="">Все теги</option>
+            </select>
+        </div>
+        @if (User.Identity.IsAuthenticated && !User.IsInRole("Guest"))
+        {
+            <div class="col-md-2">
+                <select name="onlyMine" class="form-select">
+                    <option value="false" selected="@(!(ViewData["OnlyMine"]?.ToString() == "true"))">Все доступные</option>
+                    <option value="true" selected="@(ViewData["OnlyMine"]?.ToString() == "true"))">Только мои</option>
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100 btn-no-wrap">Применить</button>
+        </div>
+    </div>
+    <!-- Скрытые поля для сохранения других параметров -->
+    <input type="hidden" name="searchString" value="@ViewData["SearchString"]" />
+    <input type="hidden" name="sortOrder" value="@ViewData["SortOrder"]" />
+</form>
+
+<!-- Форма для сортировки -->
+<form asp-action="Index" method="get" class="mb-3">
+    <div class="row align-items-center">
+        <div class="col-md-3">
+            <div class="input-group">
+                <label class="input-group-text" for="sortOrder">Сортировка:</label>
+                <select id="sortOrder" name="sortOrder" class="form-select">
+                    <option value="" selected="@(ViewData["SortOrder"]?.ToString() == "")">По названию (А-Я)</option>
+                    <option value="title_desc" selected="@(ViewData["SortOrder"]?.ToString() == "title_desc")">По названию (Я-А)</option>
+                    <option value="duration" selected="@(ViewData["SortOrder"]?.ToString() == "duration")">По длительности (возр.)</option>
+                    <option value="duration_desc" selected="@(ViewData["SortOrder"]?.ToString() == "duration_desc")">По длительности (убыв.)</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100 btn-no-wrap">Сортировать</button>
+        </div>
+    </div>
+    <!-- Скрытые поля для сохранения других параметров -->
+    <input type="hidden" name="searchString" value="@ViewData["SearchString"]" />
+    <input type="hidden" name="genreId" value="@ViewData["GenreId"]" />
+    <input type="hidden" name="yearFrom" value="@ViewData["YearFrom"]" />
+    <input type="hidden" name="yearTo" value="@ViewData["YearTo"]" />
+    <input type="hidden" name="tag" value="@ViewData["Tag"]" />
+    <input type="hidden" name="onlyMine" value="@ViewData["OnlyMine"]" />
+</form>
+
+@if (ViewData["AppliedFilters"] != null)
+{
+    var filters = ViewData["AppliedFilters"] as dynamic;
+    var applied = new List<string>();
+    if (filters.SearchString != null) applied.Add(filters.SearchString);
+    if (filters.Genre != null) applied.Add($"Жанр: {filters.Genre}");
+    if (filters.YearFrom != null) applied.Add($"Год от: {filters.YearFrom}");
+    if (filters.YearTo != null) applied.Add($"Год до: {filters.YearTo}");
+    if (filters.Tag != null) applied.Add($"Тег: {filters.Tag}");
+    if (applied.Any())
+    {
+        <div class="alert alert-info">
+            Примененные фильтры: @string.Join(", ", applied)
+        </div>
+    }
+}
+
+@if (ViewData["ShowAddTrackSuggestion"]?.ToString() == "True")
+{
+    <div class="alert alert-info">
+        У вас нет собственных треков. <a asp-action="Create" class="alert-link">Создайте новый трек</a>, чтобы добавить его в каталог!
+    </div>
+}
+
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @ViewBag.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["TrackSuccessMessage"] != null)
+{
+    <div class="alert alert-@(TempData["MessageType"] ?? "success") alert-dismissible fade show" role="alert">
+        @TempData["TrackSuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["TrackErrorMessage"] != null)
+{
+    <div class="alert alert-@(TempData["MessageType"] ?? "error") alert-dismissible fade show" role="alert">
+        @TempData["TrackErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (ViewBag.NoResultsMessage != null)
+{
+    <div class="alert alert-info">@ViewBag.NoResultsMessage</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Альбом</th>
+            <th>Исполнитель</th>
+            <th>Длительность</th>
+            <th>Жанр</th>
+            <th>Год выпуска</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in ViewData["Tracks"] as List<Track>)
+        {
+            <tr>
+                <td>@(item.Title ?? "Не указан")</td>
+                <td>@(item.Album?.Title ?? "Не указан")</td>
+                <td>@(item.Album?.Artist?.Name ?? "Не указан")</td>
+                <td>@(item.Duration > 0 ? TimeSpan.FromSeconds(item.Duration).ToString(@"mm\:ss") : "Не указана")</td>
+                <td>@(item.Album?.Genre?.Name ?? "Не указан")</td>
+                <td>@(item.Album?.ReleaseDate?.Year.ToString() ?? "Не указан")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.ID" class="btn btn-sm btn-info">Подробно</a>
+                    @if (User.Identity.IsAuthenticated && !User.IsInRole("Guest"))
+                    {
+                        <form asp-controller="Favorite" asp-action="AddFavoriteTrack" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="trackId" value="@item.ID" />
+                            <button type="submit" class="btn btn-success btn-sm">В избранное</button>
+                        </form>
+                    }
+                    @if (User.IsInRole("Admin") || item.Owner_ID == (int)ViewData["CurrentUserId"])
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-sm btn-warning">Редактировать</a>
+                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@item.ID">Удалить</button>
+                        <div class="modal fade" id="deleteModal-@item.ID" tabindex="-1" aria-labelledby="deleteModalLabel-@item.ID" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteModalLabel-@item.ID">Подтверждение удаления</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Вы уверены, что хотите удалить трек "@item.Title"?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                        <form asp-action="Delete" asp-route-id="@item.ID" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger">Удалить</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (User.Identity.IsAuthenticated && !User.IsInRole("Guest"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-sm btn-warning">Предложить теги</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<nav>
+    <ul class="pagination">
+        @for (int i = 1; i <= (int)ViewData["TotalPages"]; i++)
+        {
+            <li class="page-item @(i == (int)ViewData["CurrentPage"] ? "active" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { searchString = ViewData["SearchString"], genreId = ViewData["GenreId"], yearFrom = ViewData["YearFrom"], yearTo = ViewData["YearTo"], tag = ViewData["Tag"], sortOrder = ViewData["SortOrder"], onlyMine = ViewData["OnlyMine"], page = i })">@i</a>
+            </li>
+        }
+    </ul>
+</nav>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
+}

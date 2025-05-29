@@ -1,0 +1,76 @@
+﻿@model MusicCatalogWebApplication.Models.ProfileViewModel
+@{
+    ViewData["Title"] = "Профиль";
+}
+
+<div class="container mt-4">
+    <h2>Профиль пользователя</h2>
+
+    <form asp-action="Index" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="Login" class="form-label">Логин</label>
+                    <input asp-for="Login" class="form-control" />
+                    <span asp-validation-for="Login" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <!-- Скрываемая панель для смены пароля -->
+                <div class="mb-3">
+                    <button type="button" class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#passwordChangePanel" aria-expanded="false" aria-controls="passwordChangePanel">
+                        Изменить пароль
+                    </button>
+                    <div class="collapse" id="passwordChangePanel">
+                        <div class="card card-body mt-2">
+                            <div class="mb-3">
+                                <label asp-for="NewPassword" class="form-label">Новый пароль</label>
+                                <input asp-for="NewPassword" class="form-control" />
+                                <span asp-validation-for="NewPassword" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="ConfirmPassword" class="form-label">Подтверждение пароля</label>
+                                <input asp-for="ConfirmPassword" class="form-control" />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="CurrentPassword" class="form-label">Текущий пароль</label>
+                    <input asp-for="CurrentPassword" class="form-control" />
+                    <span asp-validation-for="CurrentPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Назад</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/additional-methods.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#passwordChangePanel").on("show.bs.collapse", function () {
+                $("#NewPassword").attr("required", "required");
+                $("#ConfirmPassword").attr("required", "required");
+            });
+            $("#passwordChangePanel").on("hide.bs.collapse", function () {
+                $("#NewPassword").removeAttr("required");
+                $("#ConfirmPassword").removeAttr("required");
+                $("#NewPassword").val("");
+                $("#ConfirmPassword").val("");
+            });
+        });
+    </script>
+}
